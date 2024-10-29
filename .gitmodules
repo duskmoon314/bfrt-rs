@@ -1,0 +1,6 @@
+[submodule "Open-Tofino"]
+	path = Open-Tofino
+	url = https://github.com/barefootnetworks/Open-Tofino.git
+[submodule "googleapis"]
+	path = googleapis
+	url = https://github.com/googleapis/googleapis.git

@@ -1,0 +1,18 @@
+[package]
+name = "bfrt"
+version = "0.1.0"
+authors = ["duskmoon (Campbell He) <kp.campbell.he@duskmoon314.com>"]
+edition = "2021"
+description = "Intel Tofino BFRuntime gRPC specification for Rust"
+categories = ["network-programming"]
+keywords = ["grpc", "tofino", "bfruntime"]
+license = "Apache-2.0"
+repository = "https://github.com/duskmoon314/bfrt-rs"
+
+[dependencies]
+prost = "0.13.3"
+prost-types = "0.13.3"
+tonic = "0.12.3"
+
+[workspace]
+members = ["xtask"]
