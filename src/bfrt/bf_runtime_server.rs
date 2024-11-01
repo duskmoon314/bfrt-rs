@@ -10,8 +10,7 @@ pub trait BfRuntime: std::marker::Send + std::marker::Sync + 'static {
     /// Server streaming response type for the Read method.
     type ReadStream: tonic::codegen::tokio_stream::Stream<
             Item = std::result::Result<super::ReadResponse, tonic::Status>,
-        >
-        + std::marker::Send
+        > + std::marker::Send
         + 'static;
     /// Read one or more P4 entities from the target.
     async fn read(
@@ -37,8 +36,7 @@ pub trait BfRuntime: std::marker::Send + std::marker::Sync + 'static {
     /// Server streaming response type for the StreamChannel method.
     type StreamChannelStream: tonic::codegen::tokio_stream::Stream<
             Item = std::result::Result<super::StreamMessageResponse, tonic::Status>,
-        >
-        + std::marker::Send
+        > + std::marker::Send
         + 'static;
     /// Represents the bidirectional stream between the controller and the
     /// switch (initiated by the controller).
@@ -112,10 +110,7 @@ where
     type Response = http::Response<tonic::body::BoxBody>;
     type Error = std::convert::Infallible;
     type Future = BoxFuture<Self::Response, Self::Error>;
-    fn poll_ready(
-        &mut self,
-        _cx: &mut Context<'_>,
-    ) -> Poll<std::result::Result<(), Self::Error>> {
+    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<std::result::Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
     }
     fn call(&mut self, req: http::Request<B>) -> Self::Future {
@@ -123,21 +118,15 @@ where
             "/bfrt_proto.BfRuntime/Write" => {
                 #[allow(non_camel_case_types)]
                 struct WriteSvc<T: BfRuntime>(pub Arc<T>);
-                impl<T: BfRuntime> tonic::server::UnaryService<super::WriteRequest>
-                for WriteSvc<T> {
+                impl<T: BfRuntime> tonic::server::UnaryService<super::WriteRequest> for WriteSvc<T> {
                     type Response = super::WriteResponse;
-                    type Future = BoxFuture<
-                        tonic::Response<Self::Response>,
-                        tonic::Status,
-                    >;
+                    type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                     fn call(
                         &mut self,
                         request: tonic::Request<super::WriteRequest>,
                     ) -> Self::Future {
                         let inner = Arc::clone(&self.0);
-                        let fut = async move {
-                            <T as BfRuntime>::write(&inner, request).await
-                        };
+                        let fut = async move { <T as BfRuntime>::write(&inner, request).await };
                         Box::pin(fut)
                     }
                 }
@@ -166,24 +155,16 @@ where
             "/bfrt_proto.BfRuntime/Read" => {
                 #[allow(non_camel_case_types)]
                 struct ReadSvc<T: BfRuntime>(pub Arc<T>);
-                impl<
-                    T: BfRuntime,
-                > tonic::server::ServerStreamingService<super::ReadRequest>
-                for ReadSvc<T> {
+                impl<T: BfRuntime> tonic::server::ServerStreamingService<super::ReadRequest> for ReadSvc<T> {
                     type Response = super::ReadResponse;
                     type ResponseStream = T::ReadStream;
-                    type Future = BoxFuture<
-                        tonic::Response<Self::ResponseStream>,
-                        tonic::Status,
-                    >;
+                    type Future = BoxFuture<tonic::Response<Self::ResponseStream>, tonic::Status>;
                     fn call(
                         &mut self,
                         request: tonic::Request<super::ReadRequest>,
                     ) -> Self::Future {
                         let inner = Arc::clone(&self.0);
-                        let fut = async move {
-                            <T as BfRuntime>::read(&inner, request).await
-                        };
+                        let fut = async move { <T as BfRuntime>::read(&inner, request).await };
                         Box::pin(fut)
                     }
                 }
@@ -212,28 +193,19 @@ where
             "/bfrt_proto.BfRuntime/SetForwardingPipelineConfig" => {
                 #[allow(non_camel_case_types)]
                 struct SetForwardingPipelineConfigSvc<T: BfRuntime>(pub Arc<T>);
-                impl<
-                    T: BfRuntime,
-                > tonic::server::UnaryService<super::SetForwardingPipelineConfigRequest>
-                for SetForwardingPipelineConfigSvc<T> {
+                impl<T: BfRuntime>
+                    tonic::server::UnaryService<super::SetForwardingPipelineConfigRequest>
+                    for SetForwardingPipelineConfigSvc<T>
+                {
                     type Response = super::SetForwardingPipelineConfigResponse;
-                    type Future = BoxFuture<
-                        tonic::Response<Self::Response>,
-                        tonic::Status,
-                    >;
+                    type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                     fn call(
                         &mut self,
-                        request: tonic::Request<
-                            super::SetForwardingPipelineConfigRequest,
-                        >,
+                        request: tonic::Request<super::SetForwardingPipelineConfigRequest>,
                     ) -> Self::Future {
                         let inner = Arc::clone(&self.0);
                         let fut = async move {
-                            <T as BfRuntime>::set_forwarding_pipeline_config(
-                                    &inner,
-                                    request,
-                                )
-                                .await
+                            <T as BfRuntime>::set_forwarding_pipeline_config(&inner, request).await
                         };
                         Box::pin(fut)
                     }
@@ -263,28 +235,19 @@ where
             "/bfrt_proto.BfRuntime/GetForwardingPipelineConfig" => {
                 #[allow(non_camel_case_types)]
                 struct GetForwardingPipelineConfigSvc<T: BfRuntime>(pub Arc<T>);
-                impl<
-                    T: BfRuntime,
-                > tonic::server::UnaryService<super::GetForwardingPipelineConfigRequest>
-                for GetForwardingPipelineConfigSvc<T> {
+                impl<T: BfRuntime>
+                    tonic::server::UnaryService<super::GetForwardingPipelineConfigRequest>
+                    for GetForwardingPipelineConfigSvc<T>
+                {
                     type Response = super::GetForwardingPipelineConfigResponse;
-                    type Future = BoxFuture<
-                        tonic::Response<Self::Response>,
-                        tonic::Status,
-                    >;
+                    type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                     fn call(
                         &mut self,
-                        request: tonic::Request<
-                            super::GetForwardingPipelineConfigRequest,
-                        >,
+                        request: tonic::Request<super::GetForwardingPipelineConfigRequest>,
                     ) -> Self::Future {
                         let inner = Arc::clone(&self.0);
                         let fut = async move {
-                            <T as BfRuntime>::get_forwarding_pipeline_config(
-                                    &inner,
-                                    request,
-                                )
-                                .await
+                            <T as BfRuntime>::get_forwarding_pipeline_config(&inner, request).await
                         };
                         Box::pin(fut)
                     }
@@ -314,26 +277,19 @@ where
             "/bfrt_proto.BfRuntime/StreamChannel" => {
                 #[allow(non_camel_case_types)]
                 struct StreamChannelSvc<T: BfRuntime>(pub Arc<T>);
-                impl<
-                    T: BfRuntime,
-                > tonic::server::StreamingService<super::StreamMessageRequest>
-                for StreamChannelSvc<T> {
+                impl<T: BfRuntime> tonic::server::StreamingService<super::StreamMessageRequest>
+                    for StreamChannelSvc<T>
+                {
                     type Response = super::StreamMessageResponse;
                     type ResponseStream = T::StreamChannelStream;
-                    type Future = BoxFuture<
-                        tonic::Response<Self::ResponseStream>,
-                        tonic::Status,
-                    >;
+                    type Future = BoxFuture<tonic::Response<Self::ResponseStream>, tonic::Status>;
                     fn call(
                         &mut self,
-                        request: tonic::Request<
-                            tonic::Streaming<super::StreamMessageRequest>,
-                        >,
+                        request: tonic::Request<tonic::Streaming<super::StreamMessageRequest>>,
                     ) -> Self::Future {
                         let inner = Arc::clone(&self.0);
-                        let fut = async move {
-                            <T as BfRuntime>::stream_channel(&inner, request).await
-                        };
+                        let fut =
+                            async move { <T as BfRuntime>::stream_channel(&inner, request).await };
                         Box::pin(fut)
                     }
                 }
@@ -359,23 +315,19 @@ where
                 };
                 Box::pin(fut)
             }
-            _ => {
-                Box::pin(async move {
-                    let mut response = http::Response::new(empty_body());
-                    let headers = response.headers_mut();
-                    headers
-                        .insert(
-                            tonic::Status::GRPC_STATUS,
-                            (tonic::Code::Unimplemented as i32).into(),
-                        );
-                    headers
-                        .insert(
-                            http::header::CONTENT_TYPE,
-                            tonic::metadata::GRPC_CONTENT_TYPE,
-                        );
-                    Ok(response)
-                })
-            }
+            _ => Box::pin(async move {
+                let mut response = http::Response::new(empty_body());
+                let headers = response.headers_mut();
+                headers.insert(
+                    tonic::Status::GRPC_STATUS,
+                    (tonic::Code::Unimplemented as i32).into(),
+                );
+                headers.insert(
+                    http::header::CONTENT_TYPE,
+                    tonic::metadata::GRPC_CONTENT_TYPE,
+                );
+                Ok(response)
+            }),
         }
     }
 }

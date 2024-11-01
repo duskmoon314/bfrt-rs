@@ -1,6 +1,7 @@
 use std::{env, fs, path::PathBuf};
 
 use form::create_directory_structure;
+use prost_build::Config;
 
 fn main() -> anyhow::Result<()> {
     // First, generate code to a temporary directory
@@ -11,10 +12,15 @@ fn main() -> anyhow::Result<()> {
     // Create a temporary directory
     let temp_dir = tempfile::tempdir()?;
 
+    let mut config = Config::new();
+    // Any has comments that cannot run in doc tests
+    config.disable_comments(&[".google.protobuf.Any"]);
+
     tonic_build::configure()
         .out_dir(&temp_dir)
         .compile_well_known_types(true)
-        .compile_protos(
+        .compile_protos_with_config(
+            config,
             &[workspace_root.join("Open-Tofino/share/bf_rt_shared/proto/bfruntime.proto")],
             &[
                 workspace_root.join("Open-Tofino/share/bf_rt_shared/proto"),
@@ -45,11 +51,23 @@ fn main() -> anyhow::Result<()> {
         pub mod bfrt {{
             {bfrt_proto_contents}
         }}
+
+        pub mod bfrt_info;
         "
     );
 
+    // Clear the generated code
+    fs::remove_dir_all(workspace_root.join("src/bfrt"))?;
+    fs::remove_dir_all(workspace_root.join("src/google"))?;
+    fs::remove_file(workspace_root.join("src/lib.rs"))?;
+    fs::remove_file(workspace_root.join("src/bfrt.rs"))?;
+    fs::remove_file(workspace_root.join("src/google.rs"))?;
+
     // Use form to create the directory
     create_directory_structure(workspace_root.join("src"), &lib_contents, true)?;
+
+    // Format the whole crate
+    let _ = std::process::Command::new("cargo").arg("fmt").status()?;
 
     Ok(())
 }

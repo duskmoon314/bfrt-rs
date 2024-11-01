@@ -406,7 +406,10 @@ pub struct SetForwardingPipelineConfigRequest {
     #[prost(uint32, tag = "2")]
     pub client_id: u32,
     /// action
-    #[prost(enumeration = "set_forwarding_pipeline_config_request::Action", tag = "3")]
+    #[prost(
+        enumeration = "set_forwarding_pipeline_config_request::Action",
+        tag = "3"
+    )]
     pub action: i32,
     /// warm init mode. Fast reconfig or Hitless
     #[prost(

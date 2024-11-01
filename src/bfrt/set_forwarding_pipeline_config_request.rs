@@ -68,9 +68,7 @@ impl Action {
             "BIND" => Some(Self::Bind),
             "VERIFY" => Some(Self::Verify),
             "VERIFY_AND_WARM_INIT_BEGIN" => Some(Self::VerifyAndWarmInitBegin),
-            "VERIFY_AND_WARM_INIT_BEGIN_AND_END" => {
-                Some(Self::VerifyAndWarmInitBeginAndEnd)
-            }
+            "VERIFY_AND_WARM_INIT_BEGIN_AND_END" => Some(Self::VerifyAndWarmInitBeginAndEnd),
             "WARM_INIT_END" => Some(Self::WarmInitEnd),
             "RECONCILE_AND_WARM_INIT_END" => Some(Self::ReconcileAndWarmInitEnd),
             _ => None,
