@@ -73,19 +73,35 @@ impl BFRTInfo {
         &self.p4_name
     }
 
-    pub fn table(&self, name: impl AsRef<str>) -> Option<&bfrt_info::Table> {
+    pub fn table_map(&self) -> &HashMap<String, bfrt_info::Table> {
+        &self.table_map
+    }
+
+    pub fn learn_map(&self) -> &HashMap<String, LearnFilter> {
+        &self.learn_map
+    }
+
+    pub fn table_id_map(&self) -> &HashMap<u32, bfrt_info::Table> {
+        &self.table_id_map
+    }
+
+    pub fn learn_id_map(&self) -> &HashMap<u32, LearnFilter> {
+        &self.learn_id_map
+    }
+
+    pub fn get_table(&self, name: impl AsRef<str>) -> Option<&bfrt_info::Table> {
         self.table_map.get(name.as_ref())
     }
 
-    pub fn learn(&self, name: impl AsRef<str>) -> Option<&LearnFilter> {
+    pub fn get_learn(&self, name: impl AsRef<str>) -> Option<&LearnFilter> {
         self.learn_map.get(name.as_ref())
     }
 
-    pub fn table_by_id(&self, id: u32) -> Option<&bfrt_info::Table> {
+    pub fn get_table_by_id(&self, id: u32) -> Option<&bfrt_info::Table> {
         self.table_id_map.get(&id)
     }
 
-    pub fn learn_by_id(&self, id: u32) -> Option<&LearnFilter> {
+    pub fn get_learn_by_id(&self, id: u32) -> Option<&LearnFilter> {
         self.learn_id_map.get(&id)
     }
 }

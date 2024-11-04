@@ -14,7 +14,7 @@ fn main() -> anyhow::Result<()> {
 
     let mut config = Config::new();
     // Any has comments that cannot run in doc tests
-    config.disable_comments(&[".google.protobuf.Any"]);
+    config.disable_comments([".google.protobuf.Any"]);
 
     tonic_build::configure()
         .out_dir(&temp_dir)

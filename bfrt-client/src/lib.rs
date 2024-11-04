@@ -12,7 +12,16 @@ error_set! {
         TonicStatus(tonic::Status),
         SerdeJson(serde_json::Error),
     };
+    ClientBasicError = {
+        MissingBfrtClient,
+        MissingStreamMessageSender,
+        Timeout,
+        #[display("Wrapped error: {msg}")]
+        WrappedError {
+            msg: String
+        }
+    } || DepsError;
     GetBFRTInfoError = {
         ConfigNotFound
-    } || DepsError;
+    } || ClientBasicError;
 }
