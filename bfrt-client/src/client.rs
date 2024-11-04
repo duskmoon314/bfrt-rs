@@ -2,11 +2,11 @@ use bfrt::bfrt::{
     bf_runtime_client::BfRuntimeClient, stream_message_request, stream_message_response::Update,
     subscribe::Notifications, ForwardingPipelineConfig, StreamMessageRequest, Subscribe,
 };
-use log::{debug, info};
+use log::{debug, info, trace};
 use tokio_util::sync::CancellationToken;
 use tonic::transport::Channel;
 
-use crate::{bfrt_info::BFRTInfo, ClientBasicError, GetBFRTInfoError};
+use crate::{bfrt_info::BFRTInfo, table::Table, ClientBasicError, GetBFRTInfoError};
 
 /// BFRuntime client wrapper
 #[derive(Debug, derive_builder::Builder)]
@@ -44,6 +44,9 @@ pub struct Client {
     /// p4_name
     #[builder(default = None)]
     pub p4_name: Option<String>,
+
+    #[builder(default = None)]
+    pub bfrt_info: Option<BFRTInfo>,
 
     /// stream channel buffer size
     #[builder(default = 10000)]
@@ -108,6 +111,19 @@ impl Client {
             .unwrap()
             .resubscribe()
     }
+
+    pub fn target(&self) -> bfrt::bfrt::TargetDevice {
+        bfrt::bfrt::TargetDevice {
+            device_id: self.device_id,
+            pipe_id: self.pipe_id,
+            direction: self.direction,
+            prsr_id: self.prsr_id,
+        }
+    }
+
+    pub fn table_mut(&mut self) -> Table<&mut Self> {
+        Table::new(self)
+    }
 }
 
 impl Client {
@@ -136,6 +152,11 @@ impl Client {
         self.stream_message_sender = Some(request_sender);
 
         self.subscribe(request_receiver).await?;
+
+        let bfrt_info = self.get_bfrt_info().await?;
+        self.bfrt_info = Some(bfrt_info);
+
+        debug!("BFRuntime client is running");
 
         Ok(())
     }
@@ -474,12 +495,7 @@ impl Client {
         entities: Vec<bfrt::bfrt::Entity>,
     ) -> Result<tonic::codec::Streaming<bfrt::bfrt::ReadResponse>, ClientBasicError> {
         let req = bfrt::bfrt::ReadRequest {
-            target: Some(bfrt::bfrt::TargetDevice {
-                device_id: self.device_id,
-                pipe_id: self.pipe_id,
-                direction: self.direction,
-                prsr_id: self.prsr_id,
-            }),
+            target: Some(self.target()),
             client_id: self.client_id,
             entities,
             p4_name: self.p4_name.clone().unwrap_or_default(),
@@ -500,6 +516,8 @@ impl Client {
     pub async fn get_forwarding_pipeline_config(
         &mut self,
     ) -> Result<bfrt::bfrt::GetForwardingPipelineConfigResponse, ClientBasicError> {
+        trace!("Getting forwarding pipeline config");
+
         let req = bfrt::bfrt::GetForwardingPipelineConfigRequest {
             device_id: self.device_id,
             client_id: self.client_id,

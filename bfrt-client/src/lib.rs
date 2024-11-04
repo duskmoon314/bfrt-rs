@@ -2,6 +2,7 @@
 
 pub mod bfrt_info;
 pub mod client;
+pub mod table;
 
 pub use bfrt;
 
@@ -23,5 +24,9 @@ error_set! {
     } || DepsError;
     GetBFRTInfoError = {
         ConfigNotFound
+    } || ClientBasicError;
+    ModTableEntryError = {
+        MissingBfrtInfo,
+        TableNotFound
     } || ClientBasicError;
 }
