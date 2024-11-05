@@ -130,6 +130,7 @@ pub struct Key {
 pub enum MatchType {
     Exact,
     Ternary,
+    #[serde(rename = "LPM")]
     Lpm,
 }
 
