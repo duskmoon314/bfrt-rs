@@ -8,6 +8,8 @@ This repo contains the generated Rust code for the BFRuntime protobuf definition
 
 - `src/`: The generated Rust code.
 - `xtask/`: Rust code for generating this crate.
+- `bfrt-client/`: A more human friendly client for interacting with the BFRuntime server.
+  - `examples/`: Example code for using the `bfrt-client` crate to interact with the Tofino
 
 ### Generating Rust Code
 

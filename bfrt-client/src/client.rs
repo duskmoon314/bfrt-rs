@@ -121,6 +121,10 @@ impl Client {
         }
     }
 
+    pub fn table(&self) -> Table<&Self> {
+        Table::new(self)
+    }
+
     pub fn table_mut(&mut self) -> Table<&mut Self> {
         Table::new(self)
     }

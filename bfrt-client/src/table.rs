@@ -14,6 +14,18 @@ impl<T: Borrow<Client>> Table<T> {
     pub fn new(client: T) -> Self {
         Table { client }
     }
+
+    pub fn get_by_name(&self, table_name: impl AsRef<str>) -> Option<&bfrt::bfrt_info::Table> {
+        let client: &Client = self.client.borrow();
+
+        client.bfrt_info.as_ref().unwrap().get_table(table_name)
+    }
+
+    pub fn get_by_id(&self, table_id: u32) -> Option<&bfrt::bfrt_info::Table> {
+        let client: &Client = self.client.borrow();
+
+        client.bfrt_info.as_ref().unwrap().get_table_by_id(table_id)
+    }
 }
 
 impl<T: Borrow<Client> + BorrowMut<Client>> Table<T> {
