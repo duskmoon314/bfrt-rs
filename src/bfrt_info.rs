@@ -45,7 +45,7 @@ pub struct Table {
     pub attributes: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
 pub enum TableType {
     Counter,
     DevConfigure,
@@ -70,6 +70,7 @@ pub enum TableType {
     PrePort,
     PrePrune,
     Register,
+    RegisterParam,
     SnapshotCfg,
     SnapshotData,
     SnapshotLiveness,
@@ -132,6 +133,8 @@ pub enum MatchType {
     Ternary,
     #[serde(rename = "LPM")]
     Lpm,
+    Range,
+    Optional,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
@@ -199,6 +202,8 @@ pub struct Singleton {
 pub enum SupportedOperation {
     Sync,
     SyncCounters,
+    SyncRegisters,
+    UpdateHitState,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
