@@ -189,6 +189,7 @@ impl Table {
                     _ => return Err(MakeTableKeyError::ExpectedBool),
                 }
             }
+            _ => return Err(MakeTableKeyError::UnsupportedMatchType),
         };
 
         Ok(bfrt::bfrt::KeyField {
@@ -245,13 +246,23 @@ impl Table {
                     let field = self
                         .data
                         .iter()
-                        .find(|f| f.singleton.name == field_name.as_ref())
+                        .find(|f| {
+                            f.singleton
+                                .as_ref()
+                                .expect("Only support singleton for now")
+                                .name
+                                == field_name.as_ref()
+                        })
                         .ok_or(MakeTableDataError::UnexistedField {
                             field_name: field_name.as_ref().to_string(),
                         });
 
                     field.map(|f| bfrt::bfrt::DataField {
-                        field_id: f.singleton.id,
+                        field_id: f
+                            .singleton
+                            .as_ref()
+                            .expect("Only support singleton for now")
+                            .id,
                         value: Some(field_value.into()),
                     })
                 })

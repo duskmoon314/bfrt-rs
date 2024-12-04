@@ -47,13 +47,23 @@ pub struct Table {
 
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
 pub enum TableType {
+    Action,
     Counter,
     DevConfigure,
+    DynHashAlgorithm,
+    DynHashCompute,
+    DynHashConfigure,
     LogDbgCnt,
+    Lpf,
     #[serde(rename = "MatchAction_Direct")]
     MatchActionDirect,
+    #[serde(rename = "MatchAction_Indirect")]
+    MatchActionIndirect,
+    #[serde(rename = "MatchAction_Indirect_Selector")]
+    MatchActionIndirectSelector,
     Meter,
     MirrorCfg,
+    ParserValueSet,
     PktgenAppCfg,
     PktgenPktBufferCfg,
     PktgenPortCfg,
@@ -71,6 +81,8 @@ pub enum TableType {
     PrePrune,
     Register,
     RegisterParam,
+    Selector,
+    SelectorGetMember,
     SnapshotCfg,
     SnapshotData,
     SnapshotLiveness,
@@ -110,6 +122,7 @@ pub enum TableType {
     TmQueueMap,
     TmQueueSchedCfg,
     TmQueueSchedShaping,
+    Wred,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
@@ -129,6 +142,7 @@ pub struct Key {
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub enum MatchType {
+    ATCAM,
     Exact,
     Ternary,
     #[serde(rename = "LPM")]
@@ -184,7 +198,9 @@ pub struct Data {
 
     pub read_only: bool,
 
-    pub singleton: Singleton,
+    pub singleton: Option<Singleton>,
+
+    pub oneof: Option<Vec<Singleton>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
