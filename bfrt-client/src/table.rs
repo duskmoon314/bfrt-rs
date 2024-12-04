@@ -15,13 +15,16 @@ impl<T: Borrow<Client>> Table<T> {
         Table { client }
     }
 
-    pub fn get_by_name(&self, table_name: impl AsRef<str>) -> Option<&bfrt::bfrt_info::Table> {
+    pub fn get_by_name(
+        &self,
+        table_name: impl AsRef<str>,
+    ) -> Option<crate::bfrt_info::table::Table> {
         let client: &Client = self.client.borrow();
 
         client.bfrt_info.as_ref().unwrap().get_table(table_name)
     }
 
-    pub fn get_by_id(&self, table_id: u32) -> Option<&bfrt::bfrt_info::Table> {
+    pub fn get_by_id(&self, table_id: u32) -> Option<crate::bfrt_info::table::Table> {
         let client: &Client = self.client.borrow();
 
         client.bfrt_info.as_ref().unwrap().get_table_by_id(table_id)
@@ -29,17 +32,21 @@ impl<T: Borrow<Client>> Table<T> {
 }
 
 impl<T: Borrow<Client> + BorrowMut<Client>> Table<T> {
-    pub async fn get_entry(
+    pub async fn get_entries(
         &mut self,
-        table_entry: bfrt::bfrt::TableEntry,
+        table_entries: Vec<bfrt::bfrt::TableEntry>,
+        target: Option<bfrt::bfrt::TargetDevice>,
     ) -> Result<Vec<bfrt::bfrt::TableEntry>, ClientBasicError> {
         let client: &mut Client = self.client.borrow_mut();
 
-        let entity = bfrt::bfrt::Entity {
-            entity: Some(bfrt::bfrt::entity::Entity::TableEntry(table_entry)),
-        };
+        let entities = table_entries
+            .into_iter()
+            .map(|entry| bfrt::bfrt::Entity {
+                entity: Some(bfrt::bfrt::entity::Entity::TableEntry(entry)),
+            })
+            .collect();
 
-        let mut res_stream = client.read(vec![entity]).await?;
+        let mut res_stream = client.read(entities, target).await?;
 
         let mut entities: Vec<bfrt::bfrt::Entity> = Vec::new();
 
@@ -61,57 +68,84 @@ impl<T: Borrow<Client> + BorrowMut<Client>> Table<T> {
         Ok(entries)
     }
 
-    pub async fn insert_entry(
+    pub async fn write_entries(
         &mut self,
-        table_entry: bfrt::bfrt::TableEntry,
+        table_entries: Vec<bfrt::bfrt::TableEntry>,
+        update_type: bfrt::bfrt::update::Type,
+        target: Option<bfrt::bfrt::TargetDevice>,
     ) -> Result<(), ClientBasicError> {
         let client: &mut Client = self.client.borrow_mut();
 
-        let update = bfrt::bfrt::Update {
-            r#type: bfrt::bfrt::update::Type::Insert as i32,
-            entity: Some(bfrt::bfrt::Entity {
-                entity: Some(bfrt::bfrt::entity::Entity::TableEntry(table_entry)),
-            }),
-        };
+        let updates = table_entries
+            .into_iter()
+            .map(|entry| bfrt::bfrt::Update {
+                r#type: update_type as i32,
+                entity: Some(bfrt::bfrt::Entity {
+                    entity: Some(bfrt::bfrt::entity::Entity::TableEntry(entry)),
+                }),
+            })
+            .collect();
 
-        client.write(vec![update]).await?;
+        client.write(updates, target).await?;
 
         Ok(())
     }
 
-    pub async fn modify_entry(
+    pub async fn insert_entries(
         &mut self,
-        table_entry: bfrt::bfrt::TableEntry,
+        table_entries: Vec<bfrt::bfrt::TableEntry>,
+        target: Option<bfrt::bfrt::TargetDevice>,
     ) -> Result<(), ClientBasicError> {
-        let client: &mut Client = self.client.borrow_mut();
-
-        let update = bfrt::bfrt::Update {
-            r#type: bfrt::bfrt::update::Type::Modify as i32,
-            entity: Some(bfrt::bfrt::Entity {
-                entity: Some(bfrt::bfrt::entity::Entity::TableEntry(table_entry)),
-            }),
-        };
-
-        client.write(vec![update]).await?;
-
-        Ok(())
+        self.write_entries(table_entries, bfrt::bfrt::update::Type::Insert, target)
+            .await
     }
 
-    pub async fn delete_entry(
+    pub async fn modify_entries(
         &mut self,
-        table_entry: bfrt::bfrt::TableEntry,
+        table_entries: Vec<bfrt::bfrt::TableEntry>,
+        target: Option<bfrt::bfrt::TargetDevice>,
     ) -> Result<(), ClientBasicError> {
-        let client: &mut Client = self.client.borrow_mut();
+        self.write_entries(table_entries, bfrt::bfrt::update::Type::Modify, target)
+            .await
+    }
 
-        let update = bfrt::bfrt::Update {
-            r#type: bfrt::bfrt::update::Type::Delete as i32,
-            entity: Some(bfrt::bfrt::Entity {
-                entity: Some(bfrt::bfrt::entity::Entity::TableEntry(table_entry)),
-            }),
-        };
+    pub async fn modify_inc_entries(
+        &mut self,
+        table_entries: Vec<bfrt::bfrt::TableEntry>,
+        target: Option<bfrt::bfrt::TargetDevice>,
+    ) -> Result<(), ClientBasicError> {
+        self.write_entries(table_entries, bfrt::bfrt::update::Type::ModifyInc, target)
+            .await
+    }
 
-        client.write(vec![update]).await?;
+    pub async fn delete_entries(
+        &mut self,
+        table_entries: Vec<bfrt::bfrt::TableEntry>,
+        target: Option<bfrt::bfrt::TargetDevice>,
+    ) -> Result<(), ClientBasicError> {
+        self.write_entries(table_entries, bfrt::bfrt::update::Type::Delete, target)
+            .await
+    }
 
-        Ok(())
+    pub async fn upsert_entries(
+        &mut self,
+        table_entries: Vec<bfrt::bfrt::TableEntry>,
+        target: Option<bfrt::bfrt::TargetDevice>,
+    ) -> Result<(), ClientBasicError> {
+        self.write_entries(
+            table_entries,
+            bfrt::bfrt::update::Type::InsertOrModify,
+            target,
+        )
+        .await
+    }
+
+    pub async fn reset_entries(
+        &mut self,
+        table_entries: Vec<bfrt::bfrt::TableEntry>,
+        target: Option<bfrt::bfrt::TargetDevice>,
+    ) -> Result<(), ClientBasicError> {
+        self.write_entries(table_entries, bfrt::bfrt::update::Type::Reset, target)
+            .await
     }
 }

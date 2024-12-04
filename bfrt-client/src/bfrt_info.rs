@@ -2,6 +2,9 @@ use std::collections::HashMap;
 
 use bfrt::bfrt_info::{self, LearnFilter};
 
+pub mod learn;
+pub mod table;
+
 /// Wrapper for real BFRT info, provides utility methods
 #[derive(Debug, Clone)]
 pub struct BFRTInfo {
@@ -31,12 +34,14 @@ impl BFRTInfo {
         let mut learn_id_map = HashMap::new();
 
         for table in &p4_info.tables {
-            table_map.insert(table.name.clone(), table.clone());
+            // bfrt info has table names prefixed with "pipe."
+            // This is not the same as data names, which are not prefixed
+            table_map.insert(table.name.replacen("pipe.", "", 1), table.clone());
             table_id_map.insert(table.id, table.clone());
         }
 
         for learn in &p4_info.learn_filters {
-            learn_map.insert(learn.name.clone(), learn.clone());
+            learn_map.insert(learn.name.replacen("pipe.", "", 1), learn.clone());
             learn_id_map.insert(learn.id, learn.clone());
         }
 
@@ -89,19 +94,19 @@ impl BFRTInfo {
         &self.learn_id_map
     }
 
-    pub fn get_table(&self, name: impl AsRef<str>) -> Option<&bfrt_info::Table> {
-        self.table_map.get(name.as_ref())
+    pub fn get_table(&self, name: impl AsRef<str>) -> Option<table::Table> {
+        self.table_map.get(name.as_ref()).map(table::Table::new)
     }
 
-    pub fn get_learn(&self, name: impl AsRef<str>) -> Option<&LearnFilter> {
-        self.learn_map.get(name.as_ref())
+    pub fn get_learn<T>(&self, name: impl AsRef<str>) -> Option<learn::Learn<T>> {
+        self.learn_map.get(name.as_ref()).map(learn::Learn::new)
     }
 
-    pub fn get_table_by_id(&self, id: u32) -> Option<&bfrt_info::Table> {
-        self.table_id_map.get(&id)
+    pub fn get_table_by_id(&self, id: u32) -> Option<table::Table> {
+        self.table_id_map.get(&id).map(table::Table::new)
     }
 
-    pub fn get_learn_by_id(&self, id: u32) -> Option<&LearnFilter> {
-        self.learn_id_map.get(&id)
+    pub fn get_learn_by_id<T>(&self, id: u32) -> Option<learn::Learn<T>> {
+        self.learn_id_map.get(&id).map(learn::Learn::new)
     }
 }

@@ -1,6 +1,7 @@
 use bfrt::bfrt::{
     bf_runtime_client::BfRuntimeClient, stream_message_request, stream_message_response::Update,
     subscribe::Notifications, ForwardingPipelineConfig, StreamMessageRequest, Subscribe,
+    TargetDevice,
 };
 use log::{debug, info, trace};
 use tokio_util::sync::CancellationToken;
@@ -42,7 +43,7 @@ pub struct Client {
     pub client_id: u32,
 
     /// p4_name
-    #[builder(default = None)]
+    #[builder(default = None, setter(into, strip_option))]
     pub p4_name: Option<String>,
 
     #[builder(default = None)]
@@ -79,30 +80,36 @@ pub struct Client {
 }
 
 impl Client {
+    /// Create a new client via builder
     pub fn builder() -> ClientBuilder {
         ClientBuilder::default()
     }
 
+    /// Subscribe to the subscribe messages [Subscribe](bfrt::bfrt::Subscribe)
     pub fn subscribe_rx(&self) -> tokio::sync::broadcast::Receiver<bfrt::bfrt::Subscribe> {
         self.subscribe_rx.as_ref().unwrap().resubscribe()
     }
 
+    /// Subscribe to the digest messages [DigestList](bfrt::bfrt::DigestList)
     pub fn digest_rx(&self) -> tokio::sync::broadcast::Receiver<bfrt::bfrt::DigestList> {
         self.digest_rx.as_ref().unwrap().resubscribe()
     }
 
+    /// Subscribe to the idle timeout messages [IdleTimeoutNotification](bfrt::bfrt::IdleTimeoutNotification)
     pub fn idle_timeout_rx(
         &self,
     ) -> tokio::sync::broadcast::Receiver<bfrt::bfrt::IdleTimeoutNotification> {
         self.idle_timeout_rx.as_ref().unwrap().resubscribe()
     }
 
+    /// Subscribe to the port status change messages [PortStatusChgNotification](bfrt::bfrt::PortStatusChgNotification)
     pub fn port_status_change_rx(
         &self,
     ) -> tokio::sync::broadcast::Receiver<bfrt::bfrt::PortStatusChgNotification> {
         self.port_status_change_rx.as_ref().unwrap().resubscribe()
     }
 
+    /// Subscribe to the set forwarding pipeline config messages [SetForwardingPipelineConfigResponse](bfrt::bfrt::SetForwardingPipelineConfigResponse)
     pub fn set_forwarding_pipeline_config_rx(
         &self,
     ) -> tokio::sync::broadcast::Receiver<bfrt::bfrt::SetForwardingPipelineConfigResponse> {
@@ -112,6 +119,23 @@ impl Client {
             .resubscribe()
     }
 
+    pub fn device_id(&self) -> u32 {
+        self.device_id
+    }
+
+    pub fn pipe_id(&self) -> u32 {
+        self.pipe_id
+    }
+
+    pub fn direction(&self) -> u32 {
+        self.direction
+    }
+
+    pub fn prsr_id(&self) -> u32 {
+        self.prsr_id
+    }
+
+    /// Get the target device of the client
     pub fn target(&self) -> bfrt::bfrt::TargetDevice {
         bfrt::bfrt::TargetDevice {
             device_id: self.device_id,
@@ -121,10 +145,12 @@ impl Client {
         }
     }
 
+    /// Get the table helper
     pub fn table(&self) -> Table<&Self> {
         Table::new(self)
     }
 
+    /// Get the mutable table helper
     pub fn table_mut(&mut self) -> Table<&mut Self> {
         Table::new(self)
     }
@@ -158,9 +184,11 @@ impl Client {
         self.subscribe(request_receiver).await?;
 
         let bfrt_info = self.get_bfrt_info().await?;
+        self.bind_pipeline_config(bfrt_info.p4_name().clone())
+            .await?;
         self.bfrt_info = Some(bfrt_info);
 
-        debug!("BFRuntime client is running");
+        info!("BFRuntime client is running");
 
         Ok(())
     }
@@ -384,6 +412,8 @@ impl Client {
     }
 
     /// Get the BFRT Info
+    ///
+    /// This method is executed in [run](Client::run), so it may not be necessary to call it manually
     pub async fn get_bfrt_info(&mut self) -> Result<BFRTInfo, GetBFRTInfoError> {
         let pipeline_config = self.get_forwarding_pipeline_config().await?;
 
@@ -469,14 +499,10 @@ impl Client {
     pub async fn write(
         &mut self,
         updates: Vec<bfrt::bfrt::Update>,
+        target: Option<TargetDevice>,
     ) -> Result<bfrt::bfrt::WriteResponse, ClientBasicError> {
         let req = bfrt::bfrt::WriteRequest {
-            target: Some(bfrt::bfrt::TargetDevice {
-                device_id: self.device_id,
-                pipe_id: self.pipe_id,
-                direction: self.direction,
-                prsr_id: self.prsr_id,
-            }),
+            target: target.or(Some(self.target())),
             client_id: self.client_id,
             updates,
             atomicity: bfrt::bfrt::write_request::Atomicity::ContinueOnError as i32,
@@ -497,9 +523,10 @@ impl Client {
     pub async fn read(
         &mut self,
         entities: Vec<bfrt::bfrt::Entity>,
+        target: Option<TargetDevice>,
     ) -> Result<tonic::codec::Streaming<bfrt::bfrt::ReadResponse>, ClientBasicError> {
         let req = bfrt::bfrt::ReadRequest {
-            target: Some(self.target()),
+            target: target.or(Some(self.target())),
             client_id: self.client_id,
             entities,
             p4_name: self.p4_name.clone().unwrap_or_default(),
