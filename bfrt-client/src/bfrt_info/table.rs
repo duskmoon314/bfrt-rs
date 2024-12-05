@@ -36,42 +36,50 @@ impl From<bool> for KeyValue {
     }
 }
 
-pub enum DataValue {
-    Bytes(Vec<u8>),
-    F32(f32),
+#[derive(Clone, Debug)]
+pub struct DataValue(bfrt::bfrt::data_field::Value);
+
+impl Deref for DataValue {
+    type Target = bfrt::bfrt::data_field::Value;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl From<DataValue> for bfrt::bfrt::data_field::Value {
+    fn from(v: DataValue) -> Self {
+        v.0
+    }
 }
 
 impl From<Vec<u8>> for DataValue {
     fn from(v: Vec<u8>) -> Self {
-        DataValue::Bytes(v)
+        DataValue(bfrt::bfrt::data_field::Value::Stream(v))
     }
 }
 
 impl From<f32> for DataValue {
     fn from(v: f32) -> Self {
-        DataValue::F32(v)
+        DataValue(bfrt::bfrt::data_field::Value::FloatVal(v))
     }
 }
 
-impl From<DataValue> for bfrt::bfrt::data_field::Value {
-    fn from(value: DataValue) -> Self {
-        use bfrt::bfrt::data_field::Value::*;
-
-        match value {
-            DataValue::Bytes(v) => Stream(v),
-            DataValue::F32(v) => FloatVal(v),
-        }
+impl From<String> for DataValue {
+    fn from(v: String) -> Self {
+        DataValue(bfrt::bfrt::data_field::Value::StrVal(v))
     }
 }
 
-impl From<&DataValue> for bfrt::bfrt::data_field::Value {
-    fn from(value: &DataValue) -> Self {
-        use bfrt::bfrt::data_field::Value::*;
+impl From<&str> for DataValue {
+    fn from(v: &str) -> Self {
+        DataValue(bfrt::bfrt::data_field::Value::StrVal(v.to_string()))
+    }
+}
 
-        match value {
-            DataValue::Bytes(v) => Stream(v.clone()),
-            DataValue::F32(v) => FloatVal(*v),
-        }
+impl From<bool> for DataValue {
+    fn from(v: bool) -> Self {
+        DataValue(bfrt::bfrt::data_field::Value::BoolVal(v))
     }
 }
 
@@ -226,7 +234,7 @@ impl Table {
 
                     field.map(|f| bfrt::bfrt::DataField {
                         field_id: f.id.expect("Action Data ID is None"),
-                        value: Some(field_value.into()),
+                        value: Some(field_value.clone().into()),
                     })
                 })
                 .collect::<Result<Vec<_>, _>>()?;
@@ -263,7 +271,7 @@ impl Table {
                             .as_ref()
                             .expect("Only support singleton for now")
                             .id,
-                        value: Some(field_value.into()),
+                        value: Some(field_value.clone().into()),
                     })
                 })
                 .collect::<Result<Vec<_>, _>>()?;

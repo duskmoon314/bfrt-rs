@@ -148,4 +148,89 @@ impl<T: Borrow<Client> + BorrowMut<Client>> Table<T> {
         self.write_entries(table_entries, bfrt::bfrt::update::Type::Reset, target)
             .await
     }
+
+    pub async fn write_attributes(
+        &mut self,
+        table_attributes: Vec<bfrt::bfrt::TableAttribute>,
+        update_type: bfrt::bfrt::update::Type,
+        target: Option<bfrt::bfrt::TargetDevice>,
+    ) -> Result<(), ClientBasicError> {
+        let client: &mut Client = self.client.borrow_mut();
+
+        let updates = table_attributes
+            .into_iter()
+            .map(|attr| bfrt::bfrt::Update {
+                r#type: update_type as i32,
+                entity: Some(bfrt::bfrt::Entity {
+                    entity: Some(bfrt::bfrt::entity::Entity::TableAttribute(attr)),
+                }),
+            })
+            .collect();
+
+        client.write(updates, target).await?;
+
+        Ok(())
+    }
+
+    pub async fn insert_attributes(
+        &mut self,
+        table_attributes: Vec<bfrt::bfrt::TableAttribute>,
+        target: Option<bfrt::bfrt::TargetDevice>,
+    ) -> Result<(), ClientBasicError> {
+        self.write_attributes(table_attributes, bfrt::bfrt::update::Type::Insert, target)
+            .await
+    }
+
+    pub async fn modify_attributes(
+        &mut self,
+        table_attributes: Vec<bfrt::bfrt::TableAttribute>,
+        target: Option<bfrt::bfrt::TargetDevice>,
+    ) -> Result<(), ClientBasicError> {
+        self.write_attributes(table_attributes, bfrt::bfrt::update::Type::Modify, target)
+            .await
+    }
+
+    pub async fn modify_inc_attributes(
+        &mut self,
+        table_attributes: Vec<bfrt::bfrt::TableAttribute>,
+        target: Option<bfrt::bfrt::TargetDevice>,
+    ) -> Result<(), ClientBasicError> {
+        self.write_attributes(
+            table_attributes,
+            bfrt::bfrt::update::Type::ModifyInc,
+            target,
+        )
+        .await
+    }
+
+    pub async fn delete_attributes(
+        &mut self,
+        table_attributes: Vec<bfrt::bfrt::TableAttribute>,
+        target: Option<bfrt::bfrt::TargetDevice>,
+    ) -> Result<(), ClientBasicError> {
+        self.write_attributes(table_attributes, bfrt::bfrt::update::Type::Delete, target)
+            .await
+    }
+
+    pub async fn upsert_attributes(
+        &mut self,
+        table_attributes: Vec<bfrt::bfrt::TableAttribute>,
+        target: Option<bfrt::bfrt::TargetDevice>,
+    ) -> Result<(), ClientBasicError> {
+        self.write_attributes(
+            table_attributes,
+            bfrt::bfrt::update::Type::InsertOrModify,
+            target,
+        )
+        .await
+    }
+
+    pub async fn reset_attributes(
+        &mut self,
+        table_attributes: Vec<bfrt::bfrt::TableAttribute>,
+        target: Option<bfrt::bfrt::TargetDevice>,
+    ) -> Result<(), ClientBasicError> {
+        self.write_attributes(table_attributes, bfrt::bfrt::update::Type::Reset, target)
+            .await
+    }
 }

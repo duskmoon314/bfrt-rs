@@ -1,5 +1,5 @@
 use bfrt_client::client::Client;
-use log::info;
+use log::{debug, info};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -18,6 +18,18 @@ async fn main() -> anyhow::Result<()> {
         .get_by_name("$PORT")
         .expect("Table not found");
 
+    let attr_port_status_change = bfrt::bfrt::TableAttribute {
+        table_id: port_table.id,
+        attribute: Some(bfrt::bfrt::table_attribute::Attribute::PortStatusNotify(
+            bfrt::bfrt::PortStatusChg { enable: true },
+        )),
+    };
+
+    client
+        .table_mut()
+        .insert_attributes(vec![attr_port_status_change], None)
+        .await?;
+
     let entry = port_table.make_entry(
         vec![port_table.make_key("$DEV_PORT", 4u32.to_be_bytes().to_vec(), None::<i32>)?],
         Some(port_table.make_data(
@@ -35,24 +47,11 @@ async fn main() -> anyhow::Result<()> {
 
     info!("We need to wait for the port to be enabled");
 
-    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    let status = client.get_port_status_change(5).await?;
 
-    info!("Now we read the entry to see the status");
+    info!("If this message is printed, the port should be enabled");
 
-    // The following code may have issues with the data field or the flags
-    // Seeing Error message:
-    //     BF_BFRT ERROR - BF_RT_SERVER:populateReadResponseWithNonRegisterFields:1740 Not supported Operation not supported
-    // But still get the result
-
-    let entry = port_table.make_entry(
-        vec![port_table.make_key("$DEV_PORT", 4u32.to_be_bytes().to_vec(), None::<i32>)?],
-        None,
-        None,
-    );
-
-    let entries = client.table_mut().get_entries(vec![entry], None).await?;
-
-    println!("Entries: {:?}", entries);
+    debug!("Port status: {:?}", status);
 
     Ok(())
 }
