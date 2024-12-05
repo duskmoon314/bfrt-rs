@@ -299,4 +299,13 @@ impl Table {
             ..Default::default()
         }
     }
+
+    pub fn make_port_status_change_attr(&self, enable: bool) -> bfrt::bfrt::TableAttribute {
+        bfrt::bfrt::TableAttribute {
+            table_id: self.id,
+            attribute: Some(bfrt::bfrt::table_attribute::Attribute::PortStatusNotify(
+                bfrt::bfrt::PortStatusChg { enable },
+            )),
+        }
+    }
 }

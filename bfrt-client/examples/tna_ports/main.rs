@@ -18,12 +18,7 @@ async fn main() -> anyhow::Result<()> {
         .get_by_name("$PORT")
         .expect("Table not found");
 
-    let attr_port_status_change = bfrt::bfrt::TableAttribute {
-        table_id: port_table.id,
-        attribute: Some(bfrt::bfrt::table_attribute::Attribute::PortStatusNotify(
-            bfrt::bfrt::PortStatusChg { enable: true },
-        )),
-    };
+    let attr_port_status_change = port_table.make_port_status_change_attr(true);
 
     client
         .table_mut()
