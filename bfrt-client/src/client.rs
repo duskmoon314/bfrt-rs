@@ -85,7 +85,7 @@ impl Client {
         ClientBuilder::default()
     }
 
-    /// Subscribe to the subscribe messages [Subscribe](bfrt::bfrt::Subscribe)
+    /// Subscribe to the subscribe messages [Subscribe]
     pub fn subscribe_rx(&self) -> tokio::sync::broadcast::Receiver<bfrt::bfrt::Subscribe> {
         self.subscribe_rx.as_ref().unwrap().resubscribe()
     }

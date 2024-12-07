@@ -127,6 +127,13 @@ impl<T: Borrow<Client> + BorrowMut<Client>> Table<T> {
             .await
     }
 
+    /// Insert or modify entries
+    ///
+    /// # Note
+    ///
+    /// Though there is a `InsertOrModify` update type, I haven't found which table supports this type.
+    ///
+    /// I recommend using [`insert_entries`] or [`modify_entries`] instead.
     pub async fn upsert_entries(
         &mut self,
         table_entries: Vec<bfrt::bfrt::TableEntry>,
