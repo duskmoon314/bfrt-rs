@@ -28,7 +28,7 @@ impl<T> Learn<T> {
 
     pub fn parse_data<'de>(
         &'de self,
-        data: &'de Vec<bfrt::bfrt::TableData>,
+        data: &'de [bfrt::bfrt::TableData],
     ) -> Result<Vec<T>, DeserializeError>
     where
         T: serde::Deserialize<'de>,
