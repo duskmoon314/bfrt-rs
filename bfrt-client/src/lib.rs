@@ -68,7 +68,9 @@ error_set! {
         ExpectedU64,
         ExpectedF32,
         ExpectedBytes,
+        ExpectedString,
         MissingFieldValue,
         IndexOutOfBounds,
+        UnsupportedDataType,
     };
 }

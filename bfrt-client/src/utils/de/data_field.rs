@@ -1,5 +1,5 @@
 use bfrt::bfrt::{data_field::Value, DataField};
-use serde::de;
+use serde::de::{self, IntoDeserializer, SeqAccess};
 
 use crate::DeserializeError;
 
@@ -170,6 +170,13 @@ impl<'de> Deserializer<'de> {
             _ => Err(DeserializeError::ExpectedBytes),
         }
     }
+
+    pub fn parse_string(&self) -> Result<String, DeserializeError> {
+        match &self.data.value {
+            Some(Value::StrVal(s)) => Ok(s.clone()),
+            _ => Err(DeserializeError::ExpectedString),
+        }
+    }
 }
 
 impl<'de> de::Deserializer<'de> for Deserializer<'de> {
@@ -273,11 +280,11 @@ impl<'de> de::Deserializer<'de> for Deserializer<'de> {
         unimplemented!()
     }
 
-    fn deserialize_string<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_string<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        unimplemented!()
+        visitor.visit_string(self.parse_string()?)
     }
 
     fn deserialize_bytes<V>(self, visitor: V) -> Result<V::Value, Self::Error>
@@ -334,18 +341,24 @@ impl<'de> de::Deserializer<'de> for Deserializer<'de> {
         unimplemented!()
     }
 
-    fn deserialize_seq<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_seq<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        unimplemented!()
+        visitor.visit_seq(SeqAccessor {
+            de: &self,
+            index: 0,
+        })
     }
 
-    fn deserialize_tuple<V>(self, _len: usize, _visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_tuple<V>(self, _len: usize, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        unimplemented!()
+        visitor.visit_seq(SeqAccessor {
+            de: &self,
+            index: 0,
+        })
     }
 
     fn deserialize_tuple_struct<V>(
@@ -410,6 +423,33 @@ impl<'de> de::Deserializer<'de> for Deserializer<'de> {
     }
 }
 
+struct SeqAccessor<'a, 'de: 'a> {
+    de: &'a Deserializer<'de>,
+    index: usize,
+}
+
+impl<'a, 'de> SeqAccess<'de> for SeqAccessor<'a, 'de> {
+    type Error = DeserializeError;
+
+    fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>
+    where
+        T: de::DeserializeSeed<'de>,
+    {
+        match &self.de.data.value {
+            Some(Value::Stream(bytes)) => {
+                if self.index >= bytes.len() {
+                    Ok(None)
+                } else {
+                    let byte = bytes[self.index];
+                    self.index += 1;
+                    seed.deserialize(byte.into_deserializer()).map(Some)
+                }
+            }
+            _ => Err(DeserializeError::UnsupportedDataType),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -423,5 +463,27 @@ mod tests {
 
         let unsigned_32: u32 = from_data_field(&data).unwrap();
         assert_eq!(unsigned_32, 0x01020304);
+    }
+
+    #[test]
+    fn deserialize_array() {
+        let data = DataField {
+            field_id: 1,
+            value: Some(Value::Stream(vec![1, 2, 3, 4])),
+        };
+
+        let array: Vec<u8> = from_data_field(&data).unwrap();
+        assert_eq!(array, vec![1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn deserialize_ipv4() {
+        let data = DataField {
+            field_id: 1,
+            value: Some(Value::Stream(vec![192, 168, 1, 1])),
+        };
+
+        let ipv4: std::net::Ipv4Addr = from_data_field(&data).unwrap();
+        assert_eq!(ipv4, std::net::Ipv4Addr::new(192, 168, 1, 1));
     }
 }

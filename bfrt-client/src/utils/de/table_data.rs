@@ -312,7 +312,12 @@ impl<'de> MapAccess<'de> for DigestDeserializer<'de> {
             return Err(DeserializeError::IndexOutOfBounds);
         }
 
-        seed.deserialize(self)
+        let value = seed.deserialize(super::data_field::Deserializer::new(
+            &self.data.fields[self.index],
+        ))?;
+        self.index += 1;
+
+        Ok(value)
     }
 }
 
@@ -395,5 +400,39 @@ mod tests {
         assert_eq!(digest_a.dst_addr, 0x000102030405);
         assert_eq!(digest_a.port, 0x01);
         assert_eq!(digest_a.src_addr, 0x000102030405);
+    }
+
+    #[test]
+    fn deserialize_digest_ipv4() {
+        #[derive(Clone, Debug, PartialEq, serde::Deserialize)]
+        struct DigestIpv4 {
+            dst_ip: std::net::Ipv4Addr,
+        }
+
+        let learn_filter = LearnFilter {
+            name: "digest_ipv4".to_string(),
+            id: 1234,
+            fields: vec![Field {
+                id: 1,
+                name: "dst_ip".to_string(),
+                repeated: false,
+                r#type: Type {
+                    r#type: "bytes".to_string(),
+                    width: Some(32),
+                },
+            }],
+        };
+
+        let table_data = TableData {
+            action_id: 0,
+            fields: vec![DataField {
+                field_id: 1,
+                value: Some(bfrt::bfrt::data_field::Value::Stream(vec![0, 0, 0, 0])),
+            }],
+        };
+
+        let digest_ipv4: DigestIpv4 = from_digest(&learn_filter, &table_data).unwrap();
+
+        assert_eq!(digest_ipv4.dst_ip, std::net::Ipv4Addr::new(0, 0, 0, 0));
     }
 }
