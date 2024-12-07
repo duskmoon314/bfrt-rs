@@ -283,6 +283,10 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut DigestDeserializer<'de> {
     {
         todo!()
     }
+
+    fn is_human_readable(&self) -> bool {
+        false
+    }
 }
 
 impl<'de> MapAccess<'de> for DigestDeserializer<'de> {
