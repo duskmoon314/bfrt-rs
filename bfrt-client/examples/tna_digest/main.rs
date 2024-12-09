@@ -19,12 +19,48 @@ struct DigestB {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    env_logger::init();
+    env_logger::builder()
+        .filter_level(log::LevelFilter::Info)
+        .parse_default_env()
+        .init();
 
     let mut client = Client::builder().p4_name("tna_digest").build()?;
     client.connect("http://127.0.0.1:50052").await?;
 
     client.run().await?;
+
+    // Prepare ports
+
+    let port_table = client
+        .table()
+        .get_by_name("$PORT")
+        .expect("Table $PORT not found");
+
+    let entries = [4u32, 8u32]
+        .iter()
+        .map(|port| {
+            port_table.make_entry(
+                vec![port_table
+                    .make_key("$DEV_PORT", port.to_be_bytes().to_vec(), None::<i32>)
+                    .expect("make_key failed")],
+                Some(
+                    port_table
+                        .make_data(
+                            None::<String>,
+                            &[
+                                ("$SPEED", "BF_SPEED_40G".into()),
+                                ("$FEC", "BF_FEC_TYP_NONE".into()),
+                                ("$PORT_ENABLE", true.into()),
+                            ],
+                        )
+                        .expect("make_data failed"),
+                ),
+                None,
+            )
+        })
+        .collect();
+
+    client.table_mut().insert_entries(entries, None).await?;
 
     let bfrt_info = client.bfrt_info.clone().expect("bfrt_info is None");
 
