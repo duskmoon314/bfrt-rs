@@ -13,7 +13,7 @@ repository = "https://github.com/duskmoon314/bfrt-rs"
 prost.workspace = true
 tonic.workspace = true
 
-tokio = "1.41.0"
+tokio = "1.43.1"
 tokio-stream = "0.1.16"
 
 bfrt = { path = ".." }
@@ -27,4 +27,4 @@ tokio-util = "0.7.12"
 
 [dev-dependencies]
 env_logger = "0.11.5"
-tokio = { version = "1.41.0", features = ["full"] }
+tokio = { version = "1.43.1", features = ["full"] }
