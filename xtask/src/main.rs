@@ -29,7 +29,7 @@ fn main() -> anyhow::Result<()> {
         )?;
 
     // Read in the generated code
-    let temp_path = temp_dir.into_path();
+    let temp_path = temp_dir.path();
     let google_protobuf_contents = fs::read_to_string(temp_path.join("google.protobuf.rs"))?;
     let google_rpc_contents = fs::read_to_string(temp_path.join("google.rpc.rs"))?;
     let bfrt_proto_contents = fs::read_to_string(temp_path.join("bfrt_proto.rs"))?;

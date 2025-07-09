@@ -10,21 +10,21 @@ license = "Apache-2.0"
 repository = "https://github.com/duskmoon314/bfrt-rs"
 
 [dependencies]
-prost.workspace = true
-tonic.workspace = true
+prost = { workspace = true }
+tonic = { workspace = true }
 
-tokio = "1.41.0"
-tokio-stream = "0.1.16"
+tokio = "1.46.1"
+tokio-stream = "0.1.17"
+tokio-util = "0.7.15"
 
+anyhow = { workspace = true }
 bfrt = { path = ".." }
-anyhow = "1.0.91"
 derive_builder = "0.20.2"
-serde = { version = "1.0.214", features = ["derive"] }
-serde_json = "1.0.132"
-error_set = "0.7.0"
-log = "0.4.22"
-tokio-util = "0.7.12"
+error_set = "0.8.5"
+log = "0.4.27"
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 [dev-dependencies]
 env_logger = "0.11.5"
-tokio = { version = "1.41.0", features = ["full"] }
+tokio = { version = "1.46.1", features = ["full"] }

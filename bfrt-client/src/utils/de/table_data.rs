@@ -55,7 +55,7 @@ impl<'de> DigestDeserializer<'de> {
     }
 }
 
-impl<'de, 'a> de::Deserializer<'de> for &'a mut DigestDeserializer<'de> {
+impl<'de> de::Deserializer<'de> for &mut DigestDeserializer<'de> {
     type Error = DeserializeError;
 
     fn deserialize_any<V>(self, _visitor: V) -> Result<V::Value, Self::Error>

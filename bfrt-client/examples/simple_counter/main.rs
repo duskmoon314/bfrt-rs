@@ -31,7 +31,7 @@ async fn main() -> anyhow::Result<()> {
             }
 
             _ = sleep(Duration::from_secs(1)) => {
-                let entries = client.table_mut().get_entry(entry.clone()).await?;
+                let entries = client.table_mut().get_entries(vec![entry.clone()], None).await?;
 
                 println!("===== Entries =====");
                 for entry in entries {

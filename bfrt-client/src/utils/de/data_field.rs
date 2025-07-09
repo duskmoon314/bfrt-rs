@@ -428,7 +428,7 @@ struct SeqAccessor<'a, 'de: 'a> {
     index: usize,
 }
 
-impl<'a, 'de> SeqAccess<'de> for SeqAccessor<'a, 'de> {
+impl<'de> SeqAccess<'de> for SeqAccessor<'_, 'de> {
     type Error = DeserializeError;
 
     fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>

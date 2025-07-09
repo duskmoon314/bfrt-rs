@@ -4,8 +4,8 @@ edition = "2021"
 publish = false
 
 [dependencies]
-anyhow = "1.0.91"
-form = "0.12.1"
-prost-build = "0.13.3"
-tempfile = "3.13.0"
-tonic-build = "0.12.3"
+anyhow = { workspace = true }
+form = "0.13.0"
+prost-build = { workspace = true }
+tempfile = "3.20.0"
+tonic-build = { workspace = true }
