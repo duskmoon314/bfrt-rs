@@ -1,4 +1,4 @@
-/// ------------------------------------------------------------------------------
+/// ---
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct WriteRequest {
     /// This is the default TargetDevice.
@@ -394,7 +394,8 @@ pub struct PortStatusChgNotification {
     #[prost(bool, tag = "2")]
     pub port_up: bool,
 }
-/// -----------------------------------------------------------------------------
+/// ---
+///
 /// SetForwardingPipelineConfig RPC takes in this message. It should contain
 /// details of the entire device.
 #[derive(Clone, PartialEq, ::prost::Message)]

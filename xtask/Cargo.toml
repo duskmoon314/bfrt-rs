@@ -6,6 +6,6 @@ publish = false
 [dependencies]
 anyhow = { workspace = true }
 form = "0.13.0"
-prost-build = { workspace = true }
+prost-build = { workspace = true, features = ["cleanup-markdown"] }
 tempfile = "3.20.0"
-tonic-build = { workspace = true }
+tonic-build = { workspace = true, features = ["cleanup-markdown"] }

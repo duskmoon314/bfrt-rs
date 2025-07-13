@@ -12,15 +12,10 @@ fn main() -> anyhow::Result<()> {
     // Create a temporary directory
     let temp_dir = tempfile::tempdir()?;
 
-    let mut config = Config::new();
-    // Any has comments that cannot run in doc tests
-    config.disable_comments([".google.protobuf.Any"]);
-
     tonic_build::configure()
         .out_dir(&temp_dir)
         .compile_well_known_types(true)
-        .compile_protos_with_config(
-            config,
+        .compile_protos(
             &[workspace_root.join("Open-Tofino/share/bf_rt_shared/proto/bfruntime.proto")],
             &[
                 workspace_root.join("Open-Tofino/share/bf_rt_shared/proto"),
