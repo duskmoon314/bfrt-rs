@@ -14,16 +14,13 @@ async fn main() -> anyhow::Result<()> {
         .get_by_name("SwitchIngress.test_reg")
         .expect("table not found");
 
-    let key = register_table.make_key("$REGISTER_INDEX", vec![0, 0, 0, 1], None::<i32>)?;
+    let key = register_table.make_key_exact("$REGISTER_INDEX", vec![0, 0, 0, 1])?;
     let insert_entry = register_table.make_entry(
         vec![key.clone()],
-        Some(register_table.make_data(
-            None::<String>,
-            &[
-                ("SwitchIngress.test_reg.first", vec![1, 2, 3, 4].into()),
-                ("SwitchIngress.test_reg.second", vec![5, 6, 7, 8].into()),
-            ],
-        )?),
+        Some(register_table.make_data([
+            ("SwitchIngress.test_reg.first", vec![1u8, 2, 3, 4].into()),
+            ("SwitchIngress.test_reg.second", vec![5u8, 6, 7, 8].into()),
+        ])?),
         None,
     );
 

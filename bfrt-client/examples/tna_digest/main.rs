@@ -41,18 +41,15 @@ async fn main() -> anyhow::Result<()> {
         .map(|port| {
             port_table.make_entry(
                 vec![port_table
-                    .make_key("$DEV_PORT", port.to_be_bytes().to_vec(), None::<i32>)
+                    .make_key_exact("$DEV_PORT", port.to_be_bytes())
                     .expect("make_key failed")],
                 Some(
                     port_table
-                        .make_data(
-                            None::<String>,
-                            &[
-                                ("$SPEED", "BF_SPEED_40G".into()),
-                                ("$FEC", "BF_FEC_TYP_NONE".into()),
-                                ("$PORT_ENABLE", true.into()),
-                            ],
-                        )
+                        .make_data([
+                            ("$SPEED", "BF_SPEED_40G".into()),
+                            ("$FEC", "BF_FEC_TYP_NONE".into()),
+                            ("$PORT_ENABLE", true.into()),
+                        ])
                         .expect("make_data failed"),
                 ),
                 None,

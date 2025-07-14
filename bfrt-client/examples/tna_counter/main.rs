@@ -27,38 +27,31 @@ async fn main() -> anyhow::Result<()> {
 
     let prepare_entries = vec![
         port_table.make_entry(
-            vec![port_table.make_key("$DEV_PORT", 4u32.to_be_bytes().to_vec(), None::<i32>)?],
-            Some(port_table.make_data(
-                None::<String>,
-                &[
-                    ("$SPEED", "BF_SPEED_40G".into()),
-                    ("$FEC", "BF_FEC_TYP_NONE".into()),
-                    ("$PORT_ENABLE", true.into()),
-                ],
-            )?),
+            vec![port_table.make_key_exact("$DEV_PORT", 4u32.to_be_bytes())?],
+            Some(port_table.make_data([
+                ("$SPEED", "BF_SPEED_40G".into()),
+                ("$FEC", "BF_FEC_TYP_NONE".into()),
+                ("$PORT_ENABLE", true.into()),
+            ])?),
             None,
         ),
         port_table.make_entry(
-            vec![port_table.make_key("$DEV_PORT", 8u32.to_be_bytes().to_vec(), None::<i32>)?],
-            Some(port_table.make_data(
-                None::<String>,
-                &[
-                    ("$SPEED", "BF_SPEED_40G".into()),
-                    ("$FEC", "BF_FEC_TYP_NONE".into()),
-                    ("$PORT_ENABLE", true.into()),
-                ],
-            )?),
+            vec![port_table.make_key_exact("$DEV_PORT", 8u32.to_be_bytes())?],
+            Some(port_table.make_data([
+                ("$SPEED", "BF_SPEED_40G".into()),
+                ("$FEC", "BF_FEC_TYP_NONE".into()),
+                ("$PORT_ENABLE", true.into()),
+            ])?),
             None,
         ),
         forward_dst_table.make_entry(
-            vec![forward_dst_table.make_key(
+            vec![forward_dst_table.make_key_exact(
                 "hdr.ethernet.dst_addr",
                 vec![0x11, 0x22, 0x33, 0x44, 0x55, 0x66],
-                None::<i32>,
             )?],
-            Some(forward_dst_table.make_data(
-                Some("SwitchIngress.hit_dst"),
-                &[("port", 4u16.to_be_bytes().to_vec().into())],
+            Some(forward_dst_table.make_action_data(
+                "SwitchIngress.hit_dst",
+                [("port", 4u16.to_be_bytes().to_vec().into())],
             )?),
             None,
         ),
@@ -75,7 +68,7 @@ async fn main() -> anyhow::Result<()> {
         .expect("Table indirect_counter not found");
 
     let read_entry = counter_table.make_entry(
-        vec![counter_table.make_key("$COUNTER_INDEX", vec![0, 0, 0, 4], None::<i32>)?],
+        vec![counter_table.make_key_exact("$COUNTER_INDEX", vec![0, 0, 0, 4])?],
         None,
         Some(bfrt::bfrt::TableFlags {
             from_hw: true,

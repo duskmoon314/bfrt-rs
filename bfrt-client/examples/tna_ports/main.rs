@@ -26,15 +26,12 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
     let entry = port_table.make_entry(
-        vec![port_table.make_key("$DEV_PORT", 4u32.to_be_bytes().to_vec(), None::<i32>)?],
-        Some(port_table.make_data(
-            None::<String>,
-            &[
-                ("$SPEED", "BF_SPEED_40G".into()),
-                ("$FEC", "BF_FEC_TYP_NONE".into()),
-                ("$PORT_ENABLE", true.into()),
-            ],
-        )?),
+        vec![port_table.make_key_exact("$DEV_PORT", 4u32.to_be_bytes())?],
+        Some(port_table.make_data([
+            ("$SPEED", "BF_SPEED_40G".into()),
+            ("$FEC", "BF_FEC_TYP_NONE".into()),
+            ("$PORT_ENABLE", true.into()),
+        ])?),
         None,
     );
 

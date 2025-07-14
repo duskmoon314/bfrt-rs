@@ -350,81 +350,82 @@ impl Table {
         })
     }
 
+    pub fn make_action_data(
+        &self,
+        action_name: impl AsRef<str>,
+        data_list: impl IntoIterator<Item = (impl AsRef<str>, bfrt::bfrt::data_field::Value)>,
+    ) -> Result<bfrt::bfrt::TableData, MakeTableDataError> {
+        let action_name = action_name.as_ref();
+
+        let action =
+            self.action_map
+                .get(action_name)
+                .ok_or(MakeTableDataError::UnexistedAction {
+                    action_name: action_name.to_string(),
+                })?;
+
+        let data_fields = data_list
+            .into_iter()
+            .map(|(field_name, field_value)| {
+                let field = action
+                    .data
+                    .iter()
+                    .find(|f| f.name.as_ref().map(|s| s.as_ref()) == Some(field_name.as_ref()))
+                    .ok_or(MakeTableDataError::UnexistedField {
+                        field_name: field_name.as_ref().to_string(),
+                    });
+
+                field.map(|f| bfrt::bfrt::DataField {
+                    field_id: f.id.expect("Action Data ID is None"),
+                    value: Some(field_value.clone().into()),
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(bfrt::bfrt::TableData {
+            action_id: action.id,
+            fields: data_fields,
+        })
+    }
+
     pub fn make_data(
         &self,
-        action_name: Option<impl AsRef<str>>,
-        data_list: &[(impl AsRef<str>, DataValue)],
+        data_list: impl IntoIterator<Item = (impl AsRef<str>, bfrt::bfrt::data_field::Value)>,
     ) -> Result<bfrt::bfrt::TableData, MakeTableDataError> {
-        if let Some(s) = action_name {
-            // Make an ActionData
+        let action_id = 0;
 
-            let action =
-                self.action_map
-                    .get(s.as_ref())
-                    .ok_or(MakeTableDataError::UnexistedAction {
-                        action_name: s.as_ref().to_string(),
-                    })?;
-
-            let data_fields = data_list
-                .iter()
-                .map(|(field_name, field_value)| {
-                    let field = action
-                        .data
-                        .iter()
-                        .find(|f| f.name.as_ref().map(|s| s.as_ref()) == Some(field_name.as_ref()))
-                        .ok_or(MakeTableDataError::UnexistedField {
-                            field_name: field_name.as_ref().to_string(),
-                        });
-
-                    field.map(|f| bfrt::bfrt::DataField {
-                        field_id: f.id.expect("Action Data ID is None"),
-                        value: Some(field_value.clone().into()),
-                    })
-                })
-                .collect::<Result<Vec<_>, _>>()?;
-
-            Ok(bfrt::bfrt::TableData {
-                action_id: action.id,
-                fields: data_fields,
-            })
-        } else {
-            // Make a TableData
-
-            let action_id = 0;
-
-            let data_fields = data_list
-                .iter()
-                .map(|(field_name, field_value)| {
-                    let field = self
-                        .data
-                        .iter()
-                        .find(|f| {
-                            f.singleton
-                                .as_ref()
-                                .expect("Only support singleton for now")
-                                .name
-                                == field_name.as_ref()
-                        })
-                        .ok_or(MakeTableDataError::UnexistedField {
-                            field_name: field_name.as_ref().to_string(),
-                        });
-
-                    field.map(|f| bfrt::bfrt::DataField {
-                        field_id: f
-                            .singleton
+        let data_fields = data_list
+            .into_iter()
+            .map(|(field_name, field_value)| {
+                let field = self
+                    .data
+                    .iter()
+                    .find(|f| {
+                        f.singleton
                             .as_ref()
                             .expect("Only support singleton for now")
-                            .id,
-                        value: Some(field_value.clone().into()),
+                            .name
+                            == field_name.as_ref()
                     })
-                })
-                .collect::<Result<Vec<_>, _>>()?;
+                    .ok_or(MakeTableDataError::UnexistedField {
+                        field_name: field_name.as_ref().to_string(),
+                    });
 
-            Ok(bfrt::bfrt::TableData {
-                action_id,
-                fields: data_fields,
+                field.map(|f| bfrt::bfrt::DataField {
+                    field_id: f
+                        .singleton
+                        .as_ref()
+                        .expect("Only support singleton for now")
+                        .id,
+                    value: Some(field_value.clone().into()),
+                })
             })
-        }
+            .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(bfrt::bfrt::TableData {
+            action_id,
+            fields: data_fields,
+        })
     }
 
     pub fn make_entry(
