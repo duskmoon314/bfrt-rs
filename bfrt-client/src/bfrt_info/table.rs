@@ -430,10 +430,12 @@ impl Table {
 
     pub fn make_entry(
         &self,
-        keys: Vec<bfrt::bfrt::KeyField>,
+        keys: impl Into<Vec<bfrt::bfrt::KeyField>>,
         data: Option<bfrt::bfrt::TableData>,
         flags: Option<bfrt::bfrt::TableFlags>,
     ) -> bfrt::bfrt::TableEntry {
+        let keys = keys.into();
+
         bfrt::bfrt::TableEntry {
             table_id: self.id,
             data,
@@ -443,6 +445,17 @@ impl Table {
             table_flags: flags,
             ..Default::default()
         }
+    }
+
+    pub fn make_entry_with_key(
+        &self,
+        keys: impl Into<Vec<bfrt::bfrt::KeyField>>,
+    ) -> bfrt::bfrt::TableEntry {
+        bfrt::bfrt::TableEntry::new()
+            .with_table_id(self.id)
+            .with_value(bfrt::bfrt::table_entry::Value::Key(bfrt::bfrt::TableKey {
+                fields: keys.into(),
+            }))
     }
 
     pub fn make_port_status_change_attr(&self, enable: bool) -> bfrt::bfrt::TableAttribute {
