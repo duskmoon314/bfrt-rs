@@ -42,7 +42,8 @@ error_set! {
         ExpectedBytes,
         ExpectedI32,
         ExpectedBool,
-        UnsupportedMatchType
+        UnsupportedMatchType,
+        WrongMatchType
     };
     MakeTableDataError = {
         UnexistedAction {

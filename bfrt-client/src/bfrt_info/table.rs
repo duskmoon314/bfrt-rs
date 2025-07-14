@@ -2,6 +2,8 @@
 
 use std::{collections::HashMap, ops::Deref};
 
+use bfrt::bfrt::key_field;
+
 use crate::{MakeTableDataError, MakeTableKeyError};
 
 /// Key value
@@ -124,11 +126,151 @@ impl Table {
         }
     }
 
+    /// Make a new key with exact type
+    pub fn make_key_exact(
+        &self,
+        name: impl AsRef<str>,
+        value: impl Into<bfrt::bfrt::key_field::Exact>,
+    ) -> Result<bfrt::bfrt::KeyField, MakeTableKeyError> {
+        use bfrt::bfrt_info::MatchType;
+
+        let name = name.as_ref();
+
+        let key_field = self
+            .key_map
+            .get(name)
+            .ok_or(MakeTableKeyError::UnexistedField {
+                field_name: name.to_string(),
+            })?;
+
+        let match_type = match key_field.match_type {
+            MatchType::Exact => Ok(key_field::MatchType::Exact(value.into())),
+            _ => Err(MakeTableKeyError::WrongMatchType),
+        }?;
+
+        Ok(bfrt::bfrt::KeyField {
+            field_id: key_field.id,
+            match_type: Some(match_type),
+        })
+    }
+
+    /// Make a new key with ternary type
+    pub fn make_key_ternary(
+        &self,
+        name: impl AsRef<str>,
+        value: impl Into<bfrt::bfrt::key_field::Ternary>,
+    ) -> Result<bfrt::bfrt::KeyField, MakeTableKeyError> {
+        use bfrt::bfrt_info::MatchType;
+
+        let name = name.as_ref();
+
+        let key_field = self
+            .key_map
+            .get(name)
+            .ok_or(MakeTableKeyError::UnexistedField {
+                field_name: name.to_string(),
+            })?;
+
+        let match_type = match key_field.match_type {
+            MatchType::Ternary => Ok(key_field::MatchType::Ternary(value.into())),
+            _ => Err(MakeTableKeyError::WrongMatchType),
+        }?;
+
+        Ok(bfrt::bfrt::KeyField {
+            field_id: key_field.id,
+            match_type: Some(match_type),
+        })
+    }
+
+    /// Make a new key with LPM type
+    pub fn make_key_lpm(
+        &self,
+        name: impl AsRef<str>,
+        value: impl Into<bfrt::bfrt::key_field::Lpm>,
+    ) -> Result<bfrt::bfrt::KeyField, MakeTableKeyError> {
+        use bfrt::bfrt_info::MatchType;
+
+        let name = name.as_ref();
+
+        let key_field = self
+            .key_map
+            .get(name)
+            .ok_or(MakeTableKeyError::UnexistedField {
+                field_name: name.to_string(),
+            })?;
+
+        let match_type = match key_field.match_type {
+            MatchType::Lpm => Ok(key_field::MatchType::Lpm(value.into())),
+            _ => Err(MakeTableKeyError::WrongMatchType),
+        }?;
+
+        Ok(bfrt::bfrt::KeyField {
+            field_id: key_field.id,
+            match_type: Some(match_type),
+        })
+    }
+
+    /// Make a new key with range type
+    pub fn make_key_range(
+        &self,
+        name: impl AsRef<str>,
+        value: impl Into<bfrt::bfrt::key_field::Range>,
+    ) -> Result<bfrt::bfrt::KeyField, MakeTableKeyError> {
+        use bfrt::bfrt_info::MatchType;
+
+        let name = name.as_ref();
+
+        let key_field = self
+            .key_map
+            .get(name)
+            .ok_or(MakeTableKeyError::UnexistedField {
+                field_name: name.to_string(),
+            })?;
+
+        let match_type = match key_field.match_type {
+            MatchType::Range => Ok(key_field::MatchType::Range(value.into())),
+            _ => Err(MakeTableKeyError::WrongMatchType),
+        }?;
+
+        Ok(bfrt::bfrt::KeyField {
+            field_id: key_field.id,
+            match_type: Some(match_type),
+        })
+    }
+
+    /// Make a new key with optional type
+    pub fn make_key_optional(
+        &self,
+        name: impl AsRef<str>,
+        value: impl Into<bfrt::bfrt::key_field::Optional>,
+    ) -> Result<bfrt::bfrt::KeyField, MakeTableKeyError> {
+        use bfrt::bfrt_info::MatchType;
+
+        let name = name.as_ref();
+
+        let key_field = self
+            .key_map
+            .get(name)
+            .ok_or(MakeTableKeyError::UnexistedField {
+                field_name: name.to_string(),
+            })?;
+
+        let match_type = match key_field.match_type {
+            MatchType::Optional => Ok(key_field::MatchType::Optional(value.into())),
+            _ => Err(MakeTableKeyError::WrongMatchType),
+        }?;
+
+        Ok(bfrt::bfrt::KeyField {
+            field_id: key_field.id,
+            match_type: Some(match_type),
+        })
+    }
+
     /// Make a new key
     pub fn make_key(
         &self,
         name: impl AsRef<str>,
-        first_value: Vec<u8>,
+        first_value: impl Into<Vec<u8>>,
         second_value: Option<impl Into<KeyValue>>,
     ) -> Result<bfrt::bfrt::KeyField, MakeTableKeyError> {
         use bfrt::bfrt::key_field::{self, *};
@@ -144,7 +286,9 @@ impl Table {
             })?;
 
         let match_type = match key_field.match_type {
-            MatchType::Exact => key_field::MatchType::Exact(Exact { value: first_value }),
+            MatchType::Exact => key_field::MatchType::Exact(Exact {
+                value: first_value.into(),
+            }),
             MatchType::Ternary => {
                 let second = second_value
                     .ok_or(MakeTableKeyError::MissingSecondValue)
@@ -152,7 +296,7 @@ impl Table {
 
                 match second {
                     KeyValue::Bytes(mask) => key_field::MatchType::Ternary(Ternary {
-                        value: first_value,
+                        value: first_value.into(),
                         mask,
                     }),
                     _ => return Err(MakeTableKeyError::ExpectedBytes),
@@ -165,7 +309,7 @@ impl Table {
 
                 match second {
                     KeyValue::I32(prefix_len) => key_field::MatchType::Lpm(Lpm {
-                        value: first_value,
+                        value: first_value.into(),
                         prefix_len,
                     }),
                     _ => return Err(MakeTableKeyError::ExpectedI32),
@@ -178,7 +322,7 @@ impl Table {
 
                 match second {
                     KeyValue::Bytes(high) => key_field::MatchType::Range(Range {
-                        low: first_value,
+                        low: first_value.into(),
                         high,
                     }),
                     _ => return Err(MakeTableKeyError::ExpectedBytes),
@@ -191,7 +335,7 @@ impl Table {
 
                 match second {
                     KeyValue::Bool(is_valid) => key_field::MatchType::Optional(Optional {
-                        value: first_value,
+                        value: first_value.into(),
                         is_valid,
                     }),
                     _ => return Err(MakeTableKeyError::ExpectedBool),
