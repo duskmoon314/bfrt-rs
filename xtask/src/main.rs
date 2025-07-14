@@ -48,6 +48,8 @@ fn main() -> anyhow::Result<()> {
         }}
 
         pub mod bfrt_info;
+
+        pub mod utils;
         "
     );
 
