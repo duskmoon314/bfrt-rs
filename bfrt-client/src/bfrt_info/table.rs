@@ -350,11 +350,40 @@ impl Table {
         })
     }
 
-    pub fn make_action_data(
+    /// Make action data for a given action
+    ///
+    /// This method constructs the action data for a specified action by matching field names and values.
+    ///
+    /// # Example
+    ///
+    /// ```p4
+    /// action forward(PortId_t port) {
+    ///     ig_intr_tm_md.ucast_egress_port = port;
+    /// }
+    /// action drop() {
+    ///     ig_intr_dprs_md.drop_ctl = 1;
+    /// }
+    /// ```
+    ///
+    /// ```ignore
+    /// let forward_data = table.make_action_data(
+    ///     "SwitchIngress.forward",
+    ///     [("port", 4u16.to_be_bytes())]
+    /// );
+    /// let drop_data = table.make_action_data::<_, &str>(
+    ///     "SwitchIngress.drop",
+    ///     []
+    /// );
+    /// ```
+    pub fn make_action_data<I, S>(
         &self,
         action_name: impl AsRef<str>,
-        data_list: impl IntoIterator<Item = (impl AsRef<str>, bfrt::bfrt::data_field::Value)>,
-    ) -> Result<bfrt::bfrt::TableData, MakeTableDataError> {
+        data_list: I,
+    ) -> Result<bfrt::bfrt::TableData, MakeTableDataError>
+    where
+        I: IntoIterator<Item = (S, bfrt::bfrt::data_field::Value)>,
+        S: AsRef<str>,
+    {
         let action_name = action_name.as_ref();
 
         let action =
@@ -377,7 +406,7 @@ impl Table {
 
                 field.map(|f| bfrt::bfrt::DataField {
                     field_id: f.id.expect("Action Data ID is None"),
-                    value: Some(field_value.clone().into()),
+                    value: Some(field_value.clone()),
                 })
             })
             .collect::<Result<Vec<_>, _>>()?;
@@ -388,10 +417,11 @@ impl Table {
         })
     }
 
-    pub fn make_data(
-        &self,
-        data_list: impl IntoIterator<Item = (impl AsRef<str>, bfrt::bfrt::data_field::Value)>,
-    ) -> Result<bfrt::bfrt::TableData, MakeTableDataError> {
+    pub fn make_data<I, S>(&self, data_list: I) -> Result<bfrt::bfrt::TableData, MakeTableDataError>
+    where
+        I: IntoIterator<Item = (S, bfrt::bfrt::data_field::Value)>,
+        S: AsRef<str>,
+    {
         let action_id = 0;
 
         let data_fields = data_list
@@ -417,7 +447,7 @@ impl Table {
                         .as_ref()
                         .expect("Only support singleton for now")
                         .id,
-                    value: Some(field_value.clone().into()),
+                    value: Some(field_value.clone()),
                 })
             })
             .collect::<Result<Vec<_>, _>>()?;
