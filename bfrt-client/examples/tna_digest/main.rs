@@ -1,8 +1,20 @@
 #![allow(dead_code)]
 
 use bfrt_client::client::Client;
+use clap::Parser;
 use log::{error, info};
 use tokio::{select, signal};
+
+#[derive(Debug, Parser)]
+struct Cli {
+    /// The address of the bfrt server
+    #[arg(long, default_value = "http://127.0.0.1:50052")]
+    server: String,
+
+    /// The switch's ports to use
+    #[arg(long, value_delimiter = ',')]
+    ports: Vec<u32>,
+}
 
 #[derive(Debug, serde::Deserialize)]
 struct DigestA {
@@ -24,8 +36,10 @@ async fn main() -> anyhow::Result<()> {
         .parse_default_env()
         .init();
 
+    let cli = Cli::parse();
+
     let mut client = Client::builder().p4_name("tna_digest").build()?;
-    client.connect("http://127.0.0.1:50052").await?;
+    client.connect(cli.server).await?;
 
     client.run().await?;
 
@@ -36,7 +50,8 @@ async fn main() -> anyhow::Result<()> {
         .get_by_name("$PORT")
         .expect("Table $PORT not found");
 
-    let entries = [4u32, 8u32]
+    let entries = cli
+        .ports
         .iter()
         .map(|port| {
             port_table.make_entry(
@@ -81,11 +96,11 @@ async fn main() -> anyhow::Result<()> {
                 match digest {
                     digest if digest.digest_id == digest_a.id => {
                         let data = digest_a.parse_data(&digest.data)?;
-                        info!("Received digest_a: {:x?}", data);
+                        info!("Received digest_a: {data:x?}");
                     },
                     digest if digest.digest_id == digest_b.id => {
                         let data = digest_b.parse_data(&digest.data)?;
-                        info!("Received digest_b: {:x?}", data);
+                        info!("Received digest_b: {data:x?}");
                     },
                     _ => {
                         error!("Unknown digest_id: {}", digest.digest_id);
